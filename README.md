@@ -1,122 +1,111 @@
-# Pico-Prosty_miernik_powietrza
+# MiernikPowietrzaPico
 
-**Prosty miernik powietrza** na Raspberry Pi Pico W — temperatura, wilgotność i jakość powietrza na OLED.
+**Prosty miernik powietrza** na Raspberry Pi Pico W — temperatura, wilgotność i jakość powietrza na małym ekranie **oraz** w przeglądarce telefonu albo komputera.
 
-Język dokumentacji: **polski**. Kod: **MicroPython**.  
-Cel: żeby **inny majsterkowicz (jak Marek) mógł to powtórzyć u siebie** — od lutowania pinów do pierwszego odczytu.
+Język dokumentacji: **polski**. Kod: **MicroPython**.
+Cel: żeby inny majsterkowicz mógł to powtórzyć u siebie.
 
-To **publiczna, uproszczona** wersja linii **SzklarniaPico**: bez Wi‑Fi i bez WWW. Tylko OLED + czujniki + przycisk.
+Obudowa na zdjęciach to **klocki LEGO** (kilkanaście sztuk, okienka z zestawu z lat 90.). Prototyp, który da się przenieść — jeszcze nie obudowa do tunelu.
 
-> **Not Polish?** Use your browser **Translator** on this page.  
-> Hardware and file names are universal.
+To samo pudełko, dwa sposoby odczytu:
+
+| Jak odpalasz | Co dostajesz |
+|--------------|----------------|
+| `main_oled_only.py` | tylko ekranik, **bez Wi‑Fi** |
+| `main.py` | Pico stawia własną sieć → telefon → panel → potem Twoja sieć w domu |
+
+Nie ma chmury, konta ani „z dowolnego miejsca na świecie”. Panel jest **lokalny**: zwykłe `http://` (nie kłódka), sieć **2,4 GHz** (Pico nie widzi 5 GHz).
+
+Historia sukcesu **bez laptopa**: OLED pokazuje nazwę sieci urządzenia, hasło urządzenia i adres — otwierasz to na telefonie.
+
+> **Not Polish?** Use your browser **Translator** on this page.
 
 ![Okablowanie na płytce stykowej](media/breadboard-okablowanie.jpg)
 
-**Wątek budowy na X:** [od zera do działającego OLED](https://x.com/GrzesiekHOBBY/status/2114417301910966423)
+**Wątek budowy na X (OLED):** [od zera do działającego OLED](https://x.com/GrzesiekHOBBY/status/2114417301910966423)
 
----
+## Co widać na OLED i w przeglądarce
 
-## Co zobaczysz na ekranie
+| Strona | Znaczenie |
+|--------|-----------|
+| Klimat | temperatura °C, wilgotność % |
+| Jakość powietrza | ocena AQI 1–5 po polsku; na starcie często „rozgrzewka…” — czujnik musi się nagrzać, to normalne |
+| eCO2 | **szacunek** z czujnika ENS160, **nie** laboratoryjny CO₂ |
+| TVOC | zbiorczo lotne związki organiczne, nie nazwa jednego gazu |
+| Sieć | najpierw hotspot urządzenia, potem IP w sieci domu |
 
-| Strona | Co pokazuje |
-|--------|-------------|
-| **Klimat** | temperatura °C, wilgotność % |
-| **Jakość powietrza** | ocena 1–5 po polsku (+ „rozgrzewka…” na start) |
-| **eCO2** | szacunek CO₂ |
-| **TVOC** | lotne związki organiczne |
+Przycisk (żółty): następna strona. Pomiar na OLED działa także wtedy, gdy Wi‑Fi nie jest połączone.
 
-Przycisk: następna strona (i budzi ekran). Po minucie OLED zasypia, żeby oszczędzać.
+OLED i telefon to **dwa ekrany**. Nie porównuj °C z jednego kadru z °C z telefonu z innej minuty.
 
----
+![OLED po starcie — skan I2C](media/oled-boot-i2c.jpg)
+![OLED — hotspot: nazwa, hasło urządzenia, adres](media/oled-hotspot.jpg)
+![OLED — klimat](media/oled-klimat.jpg)
+![OLED — jakość powietrza (rozgrzewka)](media/oled-aqi.jpg)
+![OLED — eCO2](media/oled-eco2.jpg)
+![OLED — TVOC](media/oled-tvoc.jpg)
+![OLED — po wejściu do sieci domu (LAN OK)](media/oled-lan-ok.jpg)
+![Panel w przeglądarce telefonu (nazwa sieci domu wycięta)](media/panel-telefon.jpg)
 
-## Części (BOM)
+## Części
 
 | # | Część | Uwagi |
 |---|--------|--------|
 | 1 | Raspberry Pi Pico W | z pinami albo do dolutowania |
-| 2 | Moduł AHT21 + ENS160 | jedna niebieska płytka „combo” |
+| 2 | Moduł AHT21 + ENS160 | jedna płytka „combo” |
 | 3 | OLED 0,96″ I2C | zwykle 128×64, 4 piny |
 | 4 | Przycisk taktylny | 6×6 mm |
-| 5 | Płytka stykowa + przewody | |
+| 5 | Płytka / obudowa | u mnie 13 klocków LEGO |
 
-Narzędzia: lutownica (tylko do pinów Pico), kabel USB z danymi, program **Thonny**, język **MicroPython**.
+## Piny (dwie osobne szyny)
 
----
+Żeby ekran i czujniki się nie gryzły, każde ma swoją parę przewodów.
 
-## Mapa pinów (dwie osobne szyny I2C)
-
-Żeby OLED i czujniki się nie gryzły, każde ma swoją szynę (SDA = dane, SCL = zegar).
-
-| Urządzenie | SDA / SCL | Zasilanie |
-|------------|-----------|-----------|
+| Urządzenie | GP | Zasilanie |
+|------------|-----|-----------|
 | OLED | **GP0** / **GP1** | 3,3 V + GND |
 | AHT21 + ENS160 | **GP2** / **GP3** | **3,3 V** (nie VIN) + GND |
 | Przycisk | **GP15** ↔ GND | — |
 
-Adresy: OLED `0x3C`, AHT21 `0x38`, ENS160 `0x53`.  
-Na module czujników piny ADD / CS / INT zostaw wolne.
-
-Mapa w kodzie: [`pins.py`](pins.py).
+Adresy: OLED `0x3C`, AHT `0x38`, ENS `0x53`. Mapa: [`pins.py`](pins.py).
 
 ![Lutowanie pinów do Pico](media/01-lutowanie.jpg)
 
----
+## Od OLED do telefonu
 
-## Start w 4 testach (Thonny)
-
-1. Wgraj MicroPython na Pico W.  
-2. Skopiuj wszystkie pliki `.py` z tego repo na Pico.  
-3. Uruchamiaj **po kolei** (Stop przed następnym):
-
-| Kolejność | Plik | Co ma wyjść |
-|-----------|------|-------------|
-| 1 | `test_i2c_skan.py` | OLED: `0x3c` · czujniki: `0x38`, `0x53` |
-| 2 | `test_przycisk.py` | reakcja na wciśnięcie |
-| 3 | `test_oled.py` | tekst na ekranie |
-| 4 | `test_czujniki.py` | odczyty w konsoli |
-
-4. Odpal [`main.py`](main.py) — albo zapisz go jako `main.py` na Pico, żeby startował po podłączeniu USB.
-
----
-
-## Ważne o czujniku jakości (ENS160)
-
-- pierwsze **~3 minuty** po włączeniu: na OLED widać „rozgrzewka…” — to normalne  
-- przy pierwszym użyciu warto trzymać zasilanie dłużej (nawet do doby), żeby kalibracja się ustabilizowała  
-
----
-
-## Pliki w repozytorium
+Na ekranie (wolno cytować):
 
 ```text
-Pico-Prosty_miernik_powietrza/
-├── README.md
-├── LICENSE                 ← MIT
-├── .gitignore
-├── main.py                 ← program główny
-├── pins.py                 ← piny w jednym miejscu
-├── aht21.py ens160.py ssd1306.py
-├── test_*.py               ← diagnostyka montażu
-└── media/                  ← zdjęcia z budowy
+HOTSPOT
+Miernik-Pico
+miernik123
+192.168.4.1
 ```
 
----
+1. Zasil USB. OLED sam pokazuje nazwę, hasło **urządzenia** i adres.
+2. Telefon: Wi‑Fi **2,4 GHz** → sieć `Miernik-Pico`.
+3. Przeglądarka: `http://192.168.4.1/` (nie https).
+4. W panelu wybierz sieć domu **2,4 GHz**; hasło tylko w formularzu (zostaje na płytce, nie na OLED).
+5. Hotspot **gaśnie**. Na OLED nowe IP. Telefon wraca na Wi‑Fi domu → `http://TO-NOWE-IP/` (u Ciebie będzie inne niż na zdjęciach).
 
-## Mobilnie (opcjonalnie, na później)
+Wzór: [`secrets.py.example`](secrets.py.example). Prawdziwego `secrets.py` **nie wgrywasz do Gita**.
 
-Najprościej: **powerbank** na USB Pico.  
-Albo bateria → pin **VSYS** + GND (nie prosto w 3V3). Szczegóły zostawiamy na kolejną wersję.
+## Gdy coś nie działa
 
----
+- Telefon na 5 GHz, sieć „Gość” albo VPN — często nic nie otworzy.
+- Po połączeniu z domem strona pada: telefon jeszcze siedzi na sieci Pico. Wróć na Wi‑Fi domu i wpisz **nowy** adres z OLED.
+- Ekran milczy, a skan adresów był „OK”: w klockach kabelki lubią się rozjechać. W kodzie magistrala jedzie wolniej (**100 kHz**). **USB wyłącz na 5 sekund**, sprawdź styki, nie podmieniaj od razu plików.
+- Pusty skan → okablowanie.
 
-## Linia SzklarniaPico
+Czujnik jakości: pierwsze **~3 minuty** „rozgrzewka…” — normalne. eCO2 to nie laboratoryjny CO₂.
 
-To repo to **publiczny start** linii. U autora są też prywatne etapy z WWW LAN (`Pico-Miernik_powietrza`) i stacją pogody (`Pico-Stacja_pogody`) — tu celowo zostawiamy tylko OLED + czujniki.
+## Kulisy montażu (Thonny) — nie historia sukcesu
 
----
+1. MicroPython na Pico W.
+2. Pliki `.py` z tego repo na Pico.
+3. Po kolei (Stop przed następnym): `test_i2c_skan.py` → `test_przycisk.py` → `test_oled.py` → `test_czujniki.py`.
+4. Sam ekran: `main_oled_only.py`. Panel: `main.py`.
 
 ## Licencja
 
-[MIT](LICENSE) — ucz się, buduj, poprawiaj. Mile widziana wzmianka „SzklarniaPico” / Grzesiek Hobby.
-
-Projekt: **Grzesiek Hobby** · X: [@GrzesiekHOBBY](https://x.com/GrzesiekHOBBY) · hashtag (plan): `#SzklarniaPico`
+[MIT](LICENSE). Linia **MiernikPowietrzaPico** · Grzesiek Hobby · X: [@GrzesiekHOBBY](https://x.com/GrzesiekHOBBY)

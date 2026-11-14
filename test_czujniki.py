@@ -5,7 +5,8 @@ from aht21 import AHT21
 from ens160 import ENS160
 import pins
 
-i2c = I2C(pins.SENS_I2C_ID, sda=Pin(pins.SENS_SDA), scl=Pin(pins.SENS_SCL), freq=400000)
+sf = getattr(pins, "SENS_I2C_FREQ", 100_000)
+i2c = I2C(pins.SENS_I2C_ID, sda=Pin(pins.SENS_SDA), scl=Pin(pins.SENS_SCL), freq=sf)
 print("Skan:", [hex(a) for a in i2c.scan()])
 
 aht = AHT21(i2c, pins.AHT21_ADDR)
