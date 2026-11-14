@@ -1,4 +1,6 @@
-# MiernikPowietrzaPico
+# Pico W · OLED + panel w sieci domu
+
+Linia **MiernikPowietrzaPico**.
 
 **Prosty miernik powietrza** na Raspberry Pi Pico W — temperatura, wilgotność i jakość powietrza na małym ekranie **oraz** w przeglądarce telefonu albo komputera.
 
@@ -14,9 +16,11 @@ To samo pudełko, dwa sposoby odczytu:
 | `main_oled_only.py` | tylko ekranik, **bez Wi‑Fi** |
 | `main.py` | Pico stawia własną sieć → telefon → panel → potem Twoja sieć w domu |
 
-Nie ma chmury, konta ani „z dowolnego miejsca na świecie”. Panel jest **lokalny**: zwykłe `http://` (nie kłódka), sieć **2,4 GHz** (Pico nie widzi 5 GHz).
+Nie ma chmury, konta ani „z dowolnego miejsca na świecie”. Panel jest **lokalny**: zwykłe `http://` (nie kłódka), sieć **2,4 GHz** (Pico nie widzi 5 GHz). Zasilanie: **USB 5 V**, nie 230 V.
 
 Historia sukcesu **bez laptopa**: OLED pokazuje nazwę sieci urządzenia, hasło urządzenia i adres — otwierasz to na telefonie.
+
+Poprzedni odcinek (sam ekranik, bez sieci): [Pico-Prosty_miernik_powietrza](https://github.com/GrzesiekHobby/Pico-Prosty_miernik_powietrza).
 
 > **Not Polish?** Use your browser **Translator** on this page.
 
@@ -29,7 +33,7 @@ Historia sukcesu **bez laptopa**: OLED pokazuje nazwę sieci urządzenia, hasło
 | Strona | Znaczenie |
 |--------|-----------|
 | Klimat | temperatura °C, wilgotność % |
-| Jakość powietrza | ocena AQI 1–5 po polsku; na starcie często „rozgrzewka…” — czujnik musi się nagrzać, to normalne |
+| Jakość powietrza | ocena AQI 1–5 po polsku (im wyżej, tym gorzej na skali tego czujnika). Na starcie często „rozgrzewka…” — **liczba (nawet 1) w tym momencie nic nie znaczy**. Czujnik musi się nagrzać (~3 minuty). |
 | eCO2 | **szacunek** z czujnika ENS160, **nie** laboratoryjny CO₂ |
 | TVOC | zbiorczo lotne związki organiczne, nie nazwa jednego gazu |
 | Sieć | najpierw hotspot urządzenia, potem IP w sieci domu |
@@ -37,6 +41,8 @@ Historia sukcesu **bez laptopa**: OLED pokazuje nazwę sieci urządzenia, hasło
 Przycisk (żółty): następna strona. Pomiar na OLED działa także wtedy, gdy Wi‑Fi nie jest połączone.
 
 OLED i telefon to **dwa ekrany**. Nie porównuj °C z jednego kadru z °C z telefonu z innej minuty.
+
+Poza hotspotem OLED gaśnie po **60 s** (przycisk budzi). W hotspotcie ekran **nie** zasypia, żeby dało się odczytać hasło urządzenia. Ta sama liczba jest we wzorze [`secrets.py.example`](secrets.py.example).
 
 ![OLED po starcie — skan I2C](media/oled-boot-i2c.jpg)
 ![OLED — hotspot: nazwa, hasło urządzenia, adres](media/oled-hotspot.jpg)
@@ -97,9 +103,9 @@ Wzór: [`secrets.py.example`](secrets.py.example). Prawdziwego `secrets.py` **ni
 - Ekran milczy, a skan adresów był „OK”: w klockach kabelki lubią się rozjechać. W kodzie magistrala jedzie wolniej (**100 kHz**). **USB wyłącz na 5 sekund**, sprawdź styki, nie podmieniaj od razu plików.
 - Pusty skan → okablowanie.
 
-Czujnik jakości: pierwsze **~3 minuty** „rozgrzewka…” — normalne. eCO2 to nie laboratoryjny CO₂.
+Czujnik jakości: pierwsze **~3 minuty** „rozgrzewka…” — normalne. **AQI w rozgrzewce nie jest werdyktem** („1” nie znaczy „super powietrze”). eCO2 to nie laboratoryjny CO₂.
 
-## Kulisy montażu (Thonny) — nie historia sukcesu
+## Montaż w Thonny (krok po kroku)
 
 1. MicroPython na Pico W.
 2. Pliki `.py` z tego repo na Pico.

@@ -1,4 +1,4 @@
-"""Test OLED — wyłącznie pins.py (GP0/GP1). Nie używaj test_oled_only (GP4/5)."""
+"""Test OLED — piny z pins.py (GP0/GP1)."""
 from machine import I2C, Pin
 import time
 from ssd1306 import SSD1306_I2C
